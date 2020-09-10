@@ -1,0 +1,165 @@
+/*===============================================================================
+/ Project   CAD2Y CODE FOR risk model (KARMA clinical model).
+/ Version   v1.0
+/ Software	SAS 9.4, R 3.3
+/ Author    Mikael Eriksson
+/ Date      2019-10-18
+
+/ Code		OVERVIEW
+
+			USE SEARCH/FIND TO GO DIRECTLY TO THE SECTION OF INTEREST.
+			REPORTED RESULTS MARKED WITH ASTERISK (*) BELOW
+
+			A. Setup datasets
+			B. Model development. Risk model
+			C. Model evaluatation for risk
+
+			SECTIONS
+
+			A. Setup datasets
+
+			A1. Risk datasets
+			A1.1. (A5.2.2 in orig code). Risk dataset using Karma10K case-cohort. 10K women representative Karma sample with widest possible dataset
+			A1.2. (A5.2.3 in orig code). Risk dataset using Karma10KPRS case-cohort. 10K women representative Karma sample with widest possible dataset incl. genotypes
+			A1.3. Calculate transform coefficients for the CAD image risk factors into 0-1 scale using Max and median of factors;
+
+			A2. Not used
+
+			A3. (A5.4 in orig code). Estimate mammographic feature residuals and standardize measures
+			A4. (A5.5 in orig code). Save to thesis library and as R dataset
+
+			B. Model development. Risk model
+
+			B1.1. Import datasets
+			B1.2. Perform analysis on risk datasets respectively
+
+			B2. Step 1. Estimates of individual risk factors
+			B2.1. Factor distributions in cohort, descriptives
+			B2.1.1 Max and median of factors;
+			B2.2. Model factor estimates for risk
+			B2.3. Model factor estimates for risk, additional mammographic feature interactions
+
+			B3. Step 2. Estimates of full models for risk
+			B3.0. Import datasets from above B1.1
+
+			B3.1. Table (for risk), full model with full risk factors
+			B3.1.1. Data import in B3.0
+			B3.1.2. Find optimal variable transform
+		    B3.1.3. Transform1 result
+		    B3.1.4. Transform2 result
+			B3.1.5. Model selection
+			B3.1.6. Model factor estimation
+			B3.1.7. Save factor estimates into R-script
+			B3.1.8. Save transformed dataset for use in R-script
+			B3.1.9. Save the R-script rReference population
+
+			B3.2. Table (for risk with IC/SC in separate), full model with all risk factors
+
+			C. Model evaluatation for risk
+
+			C1. Correlation plots risk
+			C1.1. Import model prediction data
+			C1.2. Make Z distribution
+			C1.3. Figures for inspection
+
+			C2. Analysis of how individual predictors influences the outcome score, LSM and 95% CI
+			C2.1. Macro
+			C2.2.1. img (image features only)
+			C2.2.2. imglif (image features + lifestyle factors)
+			C2.2.3. imglifprs (+ PRS)
+			C2.2.4. Save and report
+
+			C3. Lift chart (see gain), proportion of cancer identified among the women on the 5-95% percentile risk score
+			C3.1. Import data, same as in C1.1., i.e.
+
+			C3.2. CAD2Y img model
+			C3.2.2. Risk
+
+			C3.3. CAD2Y imglif model
+			C3.3.2. Risk
+
+			C3.4. CAD2Y imglifprs model
+			C3.4.2. Risk
+
+			C3.5. T-C risk model
+			C3.6. Gail risk model
+
+			C4. Tumour characteristics among women with risk score (individualized screening) compared with average risk (age based screening)
+			C4.1. Setup data, similar to C1.1.
+			C4.1.1 Riskdatasets
+			NOT DONE, ALREADY FROM THE BEGINNING C4.1.2. Add tumor characteristics
+			NOT DONE, ALREADY FROM THE BEGINNING C4.1.3. Define additional tumor characteristics variables
+			C4.1.4. Macro (from above C3) for (weighted) risk percentiles
+
+			C4.2. Multivariate analysis for tumour characteristics (comparing risk stratified screening (percentiles 5-20% highest/lowest scores) with age based screening)
+			C4.2.1. Imaging only based model
+			C4.2.1.2. Risk score
+			C4.2.2. Imaging + lifestyle based model
+			C4.2.2.2. Risk score
+			C4.2.3. Imaging + lifestyle + PRS based model
+			C4.2.3.2. Risk score
+
+			C4.3. Save results
+			C4.4. Hazard-ratios of risk stratified screening at 5-95% percentiles of women in relation to age based screening
+			C4.5. Hazard-ratios of tumor characteristics for women with 5% highest risks vs. average risk in age based screening
+			C4.6. Hazard-ratios of tumor characteristics for women with 10% and 20% highest risks vs. average risk in age based screening
+
+			C5. Internal validation in Karma cohort, absolute risks
+			C5.1. Setup dataset
+			C5.2. Setup risk dataset
+
+			C5.3. CAD2Y model evaluation
+			C5.3.1. Calculate absolute risks in R using the CAD2Y model on the Karma dataset (** Save to thesis library and R dataset)
+			C5.3.2. Import R output absolute probabilities
+			C5.3.3. Estimate AUC
+			C5.3.3.1. Risk.
+			C5.3.3.3. Plots for risk
+
+			C5.4. Tyrer-Cuzick, Gail, PRS absolute risks
+
+			C5.5. (same as above C4). Tumour characteristics among women with high and 5-20% highest risk score (individualized screening) compared with general and below 5-20% highest risk
+			C5.5.1. Import data, similar to C4.1.
+			C5.5.1.1. Risk datasets
+			C5.5.2. Macro (from above C4.1.4) for (weighted) recall, risk, and masking percentiles
+			C5.5.3. (C4.2). Multivariate analysis for tumour characteristics (comparing risk stratified screening (percentiles 5-20% highest/lowest scores) with age based screening). Also risk strata with each other
+			C5.5.4. (C4.2.1). Imaging only based model;
+			C5.5.5. Imaging only based model;
+			C5.5.6. (C4.2.3). Imaging + lifestyle + PRS based model;
+			C5.5.7. Save results;
+			C5.5.8. Hazard-ratios plot macro;
+			C5.5.9. Tumor characteristics in overall BC;
+			C5.5.10. Tumor characteristics in invasive BC;
+
+			D. External validation in two cohorts and Karma separate test set
+
+			D1. TomoZ cohort
+			D1.1. Setup dataset
+			D1.2. Setup risk dataset
+			D1.3. Model evaluation
+			D1.3.1. Calculate absolute risks using the CAD2Y model on the TomoZ dataset in R (** Save to thesis library and R dataset)
+			D1.3.2. Import R output absolute risks
+			D1.3.3. Estimate AUC.
+
+			D3. CSAW cohort
+			D3.1. Setup dataset
+			D3.2. Setup risk datasets
+			D3.3. Model evaluation
+			D3.3.1. Calculate absolute risks using the CAD2Y model on the CSAW dataset in R
+
+			D3.2. Model evaluation
+			D3.2.1. Calculate absolute risks using the CAD2Y model on the CSAW dataset in R
+			D3.2.2. Import R output absolute risks
+			D3.3.3. Long-term risk, Import R output absolute risks
+
+			D4. KARMA external dataset
+			D4.1. Setup dataset
+			D4.2. Setup risk datasets
+			D4.3. Model evaluation
+			D4.3.1. Calculate absolute risks using the CAD2Y model on the dataset in R
+
+			D4.2. Model evaluation
+			D4.2.1. Calculate absolute risks using the CAD2Y model on the dataset in R
+			D4.2.2. Import R output absolute risks
+			D4.3.3. Long-term risk, Import R output absolute risks
+
+/===============================================================================*/
